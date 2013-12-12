@@ -72,7 +72,7 @@ func (dc *GoDiskCache) Set(key, data string, lifetime int) error {
 	} //if
 
 	if err == nil {
-		dc.Keys[filename] = cacheFile{fileName: filename, lifeTime: lifetime}
+		dc.Keys[key] = cacheFile{fileName: filename, lifeTime: lifetime}
 	} //if
 
 	return err
