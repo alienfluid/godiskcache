@@ -31,7 +31,7 @@ func New(p *Params) *GoDiskCache {
 		err := os.Mkdir(directory, 0744)
 
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		} //if
 	} //if
 
