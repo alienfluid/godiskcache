@@ -20,18 +20,22 @@ type cacheFile struct {
 } //struct
 
 type Params struct {
-	param map[string]interface{}
+	directory string
 } //struct
 
 func New(p Params) *GoDiskCache {
 	var directory string = os.TempDir()
 
-	if _, ok := p.param["directory"]; ok {
-		directory = p.param["directory"].(string)
+	if len(p.directory) > 0 {
+		directory = p.directory
 	} //if
 
 	return &GoDiskCache{keys: make(map[string]cacheFile), directory: directory}
 } //New
+
+func NewParams() *Params {
+	return &Params{}
+} //NewParams
 
 func (dc *GoDiskCache) Get(key string) (string, error) {
 	var err error
