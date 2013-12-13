@@ -36,9 +36,9 @@ func (dc *GoDiskCache) Get(key string) (string, error) {
 		//get stats about the file, need modified time
 		if fi, err := file.Stat(); err == nil {
 			//check that cache file is still valid
-			if int(time.Now().Sub(fi.ModTime()).Seconds()) < dc.Keys[key].lifeTime {
+			if int(time.Since(fi.ModTime()).Seconds()) < dc.Keys[key].lifeTime {
 				//try reading entire file
-				if data, err := ioutil.ReadAll(file); err != nil {
+				if data, err := ioutil.ReadAll(file); err == nil {
 					return string(data), err
 				} //if
 			} //if
