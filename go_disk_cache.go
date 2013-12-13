@@ -31,8 +31,6 @@ func (dc *GoDiskCache) Get(key string) (string, error) {
 		} //if
 	}() //func
 
-	log.Println(dc.Keys[key])
-
 	//open the cache file
 	if file, err := os.Open(os.TempDir() + dc.Keys[key].fileName); err == nil {
 		//get stats about the file, need modified time
