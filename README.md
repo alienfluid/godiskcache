@@ -1,6 +1,44 @@
 godiskcache
 ===========
 
+##Installation
+
+Install the pkg
+<pre><code>go get github.com/cbinsights/godiskcache</code></pre>
+
+##Example
+
+<pre><code>package main
+
+import (
+	"github.com/cbinsights/godiskcache"
+	"log"
+	"os"
+)
+
+func main() {
+	//create new godiskcache object
+	a := godiskcache.New()
+
+	//cache data by providing your key, data to cache, and the amount of time to cache in seconds
+	err := a.Set("your key here", "I would like to cache this data!", 3600)
+
+	if err != nil {
+		log.Println(err)
+	} //if
+
+	//attempt to retrieve the cached data with your key from above
+	data, err := a.Get("your key here")
+
+	if err != nil {
+		log.Println(err)
+	} //if
+
+  //display data
+  log.Println(data)
+}//main
+</code></pre>
+
 ##License
 
 The MIT License (MIT)
