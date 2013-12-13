@@ -23,7 +23,7 @@ type Params struct {
 	directory string
 } //struct
 
-func New(p Params) *GoDiskCache {
+func New(p *Params) *GoDiskCache {
 	var directory string = os.TempDir()
 
 	if len(p.directory) > 0 {
