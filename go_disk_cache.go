@@ -10,7 +10,8 @@ import (
 ) //import
 
 type GoDiskCache struct {
-	Keys map[string]cacheFile
+	keys      map[string]cacheFile
+	directory string
 } //struct
 
 type cacheFile struct {
@@ -18,9 +19,23 @@ type cacheFile struct {
 	lifeTime int
 } //struct
 
-func New() *GoDiskCache {
-	return &GoDiskCache{Keys: make(map[string]cacheFile)}
+type Params struct {
+	directory string
+} //struct
+
+func New(p *Params) *GoDiskCache {
+	var directory string = os.TempDir()
+
+	if len(p.directory) > 0 {
+		directory = p.directory
+	} //if
+
+	return &GoDiskCache{keys: make(map[string]cacheFile), directory: directory}
 } //New
+
+func NewParams() *Params {
+	return &Params{}
+} //NewParams
 
 func (dc *GoDiskCache) Get(key string) (string, error) {
 	var err error
@@ -32,11 +47,11 @@ func (dc *GoDiskCache) Get(key string) (string, error) {
 	}() //func
 
 	//open the cache file
-	if file, err := os.Open(os.TempDir() + dc.Keys[key].fileName); err == nil {
+	if file, err := os.Open(dc.directory + dc.keys[key].fileName); err == nil {
 		//get stats about the file, need modified time
 		if fi, err := file.Stat(); err == nil {
 			//check that cache file is still valid
-			if int(time.Since(fi.ModTime()).Seconds()) < dc.Keys[key].lifeTime {
+			if int(time.Since(fi.ModTime()).Seconds()) < dc.keys[key].lifeTime {
 				//try reading entire file
 				if data, err := ioutil.ReadAll(file); err == nil {
 					return string(data), err
@@ -66,13 +81,13 @@ func (dc *GoDiskCache) Set(key, data string, lifetime int) error {
 	filename := "godiskcache_" + hex.EncodeToString(hasher.Sum(nil))
 
 	//open the file
-	if file, err := os.Create(os.TempDir() + filename); err == nil {
+	if file, err := os.Create(dc.directory + filename); err == nil {
 		_, err = file.Write([]byte(data))
 		_ = file.Close()
 	} //if
 
 	if err == nil {
-		dc.Keys[key] = cacheFile{fileName: filename, lifeTime: lifetime}
+		dc.keys[key] = cacheFile{fileName: filename, lifeTime: lifetime}
 	} //if
 
 	return err
