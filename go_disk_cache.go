@@ -20,14 +20,14 @@ type cacheFile struct {
 } //struct
 
 type Params struct {
-	directory string
+	Directory string
 } //struct
 
 func New(p *Params) *GoDiskCache {
 	var directory string = os.TempDir()
 
-	if len(p.directory) > 0 {
-		directory = p.directory
+	if len(p.Directory) > 0 {
+		directory = p.Directory
 	} //if
 
 	return &GoDiskCache{keys: make(map[string]cacheFile), directory: directory}
