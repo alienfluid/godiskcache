@@ -28,6 +28,11 @@ func New(p *Params) *GoDiskCache {
 
 	if len(p.Directory) > 0 {
 		directory = p.Directory
+		err := os.Mkdir(directory, 0744)
+
+		if err != nil {
+			log.Fatalln(err)
+		} //if
 	} //if
 
 	return &GoDiskCache{keys: make(map[string]cacheFile), directory: directory}
