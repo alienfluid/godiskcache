@@ -14,21 +14,21 @@ import (
 	"github.com/cbinsights/godiskcache"
 	"log"
 	"os"
-)
+) //if
 
 func main() {
 	//create new godiskcache object
 	a := godiskcache.New()
 
 	//cache data by providing your key, data to cache, and the amount of time to cache in seconds
-	err := a.Set("your key here", "I would like to cache this data!", 3600)
+	err := a.Set("your key here", "I would like to cache this data!")
 
 	if err != nil {
 		log.Println(err)
 	} //if
 
 	//attempt to retrieve the cached data with your key from above
-	data, err := a.Get("your key here")
+	data, err := a.Get("your key here", 3600)
 
 	if err != nil {
 		log.Println(err)
@@ -36,7 +36,7 @@ func main() {
 
   //display data
   log.Println(data)
-}//main
+} //main
 </code></pre>
 
 ##License
