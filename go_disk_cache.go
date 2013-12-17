@@ -10,13 +10,7 @@ import (
 ) //import
 
 type GoDiskCache struct {
-	keys      map[string]cacheFile
 	directory string
-} //struct
-
-type cacheFile struct {
-	fileName string
-	lifeTime int
 } //struct
 
 type Params struct {
@@ -35,14 +29,14 @@ func New(p *Params) *GoDiskCache {
 		} //if
 	} //if
 
-	return &GoDiskCache{keys: make(map[string]cacheFile), directory: directory}
+	return &GoDiskCache{directory: directory}
 } //New
 
 func NewParams() *Params {
 	return &Params{}
 } //NewParams
 
-func (dc *GoDiskCache) Get(key string) (string, error) {
+func (dc *GoDiskCache) Get(key string, lifetime int) (string, error) {
 	var err error
 
 	defer func() {
@@ -52,11 +46,11 @@ func (dc *GoDiskCache) Get(key string) (string, error) {
 	}() //func
 
 	//open the cache file
-	if file, err := os.Open(dc.directory + dc.keys[key].fileName); err == nil {
+	if file, err := os.Open(dc.directory + buildFileName(key)); err == nil {
 		//get stats about the file, need modified time
 		if fi, err := file.Stat(); err == nil {
 			//check that cache file is still valid
-			if int(time.Since(fi.ModTime()).Seconds()) < dc.keys[key].lifeTime {
+			if int(time.Since(fi.ModTime()).Seconds()) < lifetime {
 				//try reading entire file
 				if data, err := ioutil.ReadAll(file); err == nil {
 					return string(data), err
@@ -77,13 +71,7 @@ func (dc *GoDiskCache) Set(key, data string, lifetime int) error {
 		} //if
 	}() //func
 
-	//convert string to byte slice
-	converted := []byte(key)
-
-	//hash the byte slice and return the resulting string
-	hasher := sha256.New()
-	hasher.Write(converted)
-	filename := "godiskcache_" + hex.EncodeToString(hasher.Sum(nil))
+	filename := buildFileName(key)
 
 	//open the file
 	if file, err := os.Create(dc.directory + filename); err == nil {
@@ -91,9 +79,12 @@ func (dc *GoDiskCache) Set(key, data string, lifetime int) error {
 		_ = file.Close()
 	} //if
 
-	if err == nil {
-		dc.keys[key] = cacheFile{fileName: filename, lifeTime: lifetime}
-	} //if
-
 	return err
 } //func
+
+func buildFileName(key string) string {
+	//hash the byte slice and return the resulting string
+	hasher := sha256.New()
+	hasher.Write([]byte(key))
+	return "godiskcache_" + hex.EncodeToString(hasher.Sum(nil))
+} //buildFileName
