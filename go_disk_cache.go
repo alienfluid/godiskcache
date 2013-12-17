@@ -62,7 +62,7 @@ func (dc *GoDiskCache) Get(key string, lifetime int) (string, error) {
 	return "", err
 } //Get
 
-func (dc *GoDiskCache) Set(key, data string, lifetime int) error {
+func (dc *GoDiskCache) Set(key, data string) error {
 	var err error
 
 	defer func() {
