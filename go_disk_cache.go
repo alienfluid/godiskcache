@@ -6,11 +6,13 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 	"time"
 ) //import
 
 type GoDiskCache struct {
 	directory string
+	mutex     sync.RWMutex
 } //struct
 
 type Params struct {
@@ -29,7 +31,7 @@ func New(p *Params) *GoDiskCache {
 		} //if
 	} //if
 
-	return &GoDiskCache{directory: directory}
+	return &GoDiskCache{directory: directory, mutex: sync.RWMutex{}}
 } //New
 
 func NewParams() *Params {
@@ -44,6 +46,10 @@ func (dc *GoDiskCache) Get(key string, lifetime int) (string, error) {
 			log.Println(rec)
 		} //if
 	}() //func
+
+	// Take the reader lock
+	dc.mutex.RLock()
+	defer dc.mutex.RUnlock()
 
 	//open the cache file
 	if file, err := os.Open(dc.directory + buildFileName(key)); err == nil {
@@ -72,6 +78,10 @@ func (dc *GoDiskCache) Set(key, data string) error {
 	}() //func
 
 	filename := buildFileName(key)
+
+	// Take the writer lock
+	dc.mutex.Lock()
+	defer dc.mutex.Unlock()
 
 	//open the file
 	if file, err := os.Create(dc.directory + filename); err == nil {
