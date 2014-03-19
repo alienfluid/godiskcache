@@ -6,11 +6,12 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"time"
 ) //import
 
 type GoDiskCache struct {
-	directory string
+	cachePrefix string
 } //struct
 
 type Params struct {
@@ -21,15 +22,18 @@ func New(p *Params) *GoDiskCache {
 	var directory string = os.TempDir()
 
 	if len(p.Directory) > 0 {
-		directory = p.Directory
-		err := os.Mkdir(directory, 0744)
+		directory = path.Clean(p.Directory)
+		err := os.MkdirAll(directory, 0744)
 
 		if err != nil {
 			log.Println(err)
 		} //if
 	} //if
 
-	return &GoDiskCache{directory: directory}
+	dc := &GoDiskCache{}
+	dc.cachePrefix = path.Join(directory, "godiskcache_")
+
+	return dc
 } //New
 
 func NewParams() *Params {
@@ -46,7 +50,7 @@ func (dc *GoDiskCache) Get(key string, lifetime int) (string, error) {
 	}() //func
 
 	//open the cache file
-	if file, err := os.Open(dc.directory + buildFileName(key)); err == nil {
+	if file, err := os.Open(dc.buildFileName(key)); err == nil {
 		//get stats about the file, need modified time
 		if fi, err := file.Stat(); err == nil {
 			//check that cache file is still valid
@@ -71,10 +75,8 @@ func (dc *GoDiskCache) Set(key, data string) error {
 		} //if
 	}() //func
 
-	filename := buildFileName(key)
-
 	//open the file
-	if file, err := os.Create(dc.directory + filename); err == nil {
+	if file, err := os.Create(dc.buildFileName(key)); err == nil {
 		_, err = file.Write([]byte(data))
 		_ = file.Close()
 	} //if
@@ -82,9 +84,9 @@ func (dc *GoDiskCache) Set(key, data string) error {
 	return err
 } //func
 
-func buildFileName(key string) string {
+func (dc *GoDiskCache) buildFileName(key string) string {
 	//hash the byte slice and return the resulting string
 	hasher := sha256.New()
 	hasher.Write([]byte(key))
-	return "godiskcache_" + hex.EncodeToString(hasher.Sum(nil))
+	return dc.cachePrefix + hex.EncodeToString(hasher.Sum(nil))
 } //buildFileName
