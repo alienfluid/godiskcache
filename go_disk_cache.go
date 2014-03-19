@@ -22,7 +22,7 @@ func New(p *Params) *GoDiskCache {
 	var directory string = os.TempDir()
 
 	if len(p.Directory) > 0 {
-		directory = path.Clean(p.Directory)
+		directory = p.Directory
 		err := os.MkdirAll(directory, 0744)
 
 		if err != nil {
@@ -32,7 +32,6 @@ func New(p *Params) *GoDiskCache {
 
 	dc := &GoDiskCache{}
 	dc.cachePrefix = path.Join(directory, "godiskcache_")
-
 	return dc
 } //New
 
