@@ -7,10 +7,12 @@ import (
 	"log"
 	"os"
 	"path"
+	"sync"
 	"time"
 ) //import
 
 type GoDiskCache struct {
+	mutex       sync.RWMutex
 	cachePrefix string
 } //struct
 
@@ -32,6 +34,7 @@ func New(p *Params) *GoDiskCache {
 
 	dc := &GoDiskCache{}
 	dc.cachePrefix = path.Join(directory, "godiskcache_")
+	dc.mutex = sync.RWMutex{}
 	return dc
 } //New
 
@@ -48,8 +51,13 @@ func (dc *GoDiskCache) Get(key string, lifetime int) (string, error) {
 		} //if
 	}() //func
 
+	// Take the reader lock
+	dc.mutex.RLock()
+	defer dc.mutex.RUnlock()
+
 	//open the cache file
 	if file, err := os.Open(dc.buildFileName(key)); err == nil {
+		defer file.Close()
 		//get stats about the file, need modified time
 		if fi, err := file.Stat(); err == nil {
 			//check that cache file is still valid
@@ -73,6 +81,10 @@ func (dc *GoDiskCache) Set(key, data string) error {
 			log.Println(rec)
 		} //if
 	}() //func
+
+	// Take the writer lock
+	dc.mutex.Lock()
+	defer dc.mutex.Unlock()
 
 	//open the file
 	if file, err := os.Create(dc.buildFileName(key)); err == nil {
