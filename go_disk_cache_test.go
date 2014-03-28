@@ -91,8 +91,8 @@ func BenchmarkCacheReads(b *testing.B) {
 	}
 
 	// Get a list of random indices since we don't want to generate them in the loop
-	inds := make([]int, len(kv))
-	for i := 0; i < len(kv); i++ {
+	inds := make([]int, b.N)
+	for i := 0; i < b.N; i++ {
 		inds = append(inds, mrand.Intn(len(kv)))
 	}
 
@@ -101,7 +101,7 @@ func BenchmarkCacheReads(b *testing.B) {
 
 	// Test loop
 	for i := 0; i < b.N; i++ {
-		_, _ = gc.Get(keys[inds[i % len(kv)]], 3600)
+		_, _ = gc.Get(keys[inds[i]], 3600)
 	}
 }
 
@@ -122,8 +122,8 @@ func BenchmarkCacheWrites(b *testing.B) {
 	}
 
 	// Get a list of random indices since we don't want to generate them in the loop
-	inds := make([]int, len(kv))
-	for i := 0; i < len(kv); i++ {
+	inds := make([]int, b.N)
+	for i := 0; i < b.N; i++ {
 		inds = append(inds, mrand.Intn(len(kv)))
 	}
 
@@ -132,6 +132,6 @@ func BenchmarkCacheWrites(b *testing.B) {
 
 	// Test loop
 	for i := 0; i < b.N; i++ {
-		_ = gc.Set(keys[inds[i % len(kv)]], values[inds[i % len(kv)]])
+		_ = gc.Set(keys[inds[i]], values[inds[i]])
 	}
 }

@@ -9,19 +9,28 @@ import (
 	"path"
 	"sync"
 	"time"
+	"github.com/golang/groupcache/lru"
 ) //import
 
 type GoDiskCache struct {
 	mutex       sync.RWMutex
 	cachePrefix string
+	memCache		*lru.Cache
 } //struct
 
 type Params struct {
 	Directory string
+	MemItems	int
 } //struct
+
+type DataWrapper struct {
+	Ts	 time.Time
+	Data string
+} // struct
 
 func New(p *Params) *GoDiskCache {
 	var directory string = os.TempDir()
+	var items int = 10000
 
 	if len(p.Directory) > 0 {
 		directory = p.Directory
@@ -32,9 +41,15 @@ func New(p *Params) *GoDiskCache {
 		} //if
 	} //if
 
+	if p.MemItems != 0 {
+		items = p.MemItems
+	}
+
 	dc := &GoDiskCache{}
 	dc.cachePrefix = path.Join(directory, "godiskcache_")
 	dc.mutex = sync.RWMutex{}
+	dc.memCache = lru.New(items)
+
 	return dc
 } //New
 
@@ -55,6 +70,14 @@ func (dc *GoDiskCache) Get(key string, lifetime int) (string, error) {
 	dc.mutex.RLock()
 	defer dc.mutex.RUnlock()
 
+	// check the in-memory cache first
+	if val, ok := dc.memCache.Get(key); ok {
+		dw := val.(DataWrapper)
+		if int(time.Since(dw.Ts).Seconds()) < lifetime {
+			return string(dw.Data), err
+		}
+	}
+
 	//open the cache file
 	if file, err := os.Open(dc.buildFileName(key)); err == nil {
 		defer file.Close()
@@ -64,6 +87,10 @@ func (dc *GoDiskCache) Get(key string, lifetime int) (string, error) {
 			if int(time.Since(fi.ModTime()).Seconds()) < lifetime {
 				//try reading entire file
 				if data, err := ioutil.ReadAll(file); err == nil {
+					// update the cache with this value
+					dc.memCache.Add(key, DataWrapper{Ts: fi.ModTime(),
+						Data: string(data)})
+
 					return string(data), err
 				} //if
 			} //if
@@ -89,6 +116,13 @@ func (dc *GoDiskCache) Set(key, data string) error {
 	//open the file
 	if file, err := os.Create(dc.buildFileName(key)); err == nil {
 		_, err = file.Write([]byte(data))
+
+		// store it in the in-memory cache
+		if fi, err := file.Stat(); err == nil {
+			ts := fi.ModTime()
+			dc.memCache.Add(key, DataWrapper{Ts: ts, Data: data})
+		}
+
 		_ = file.Close()
 	} //if
 
