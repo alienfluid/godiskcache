@@ -85,7 +85,7 @@ func BenchmarkCacheReads(b *testing.B) {
 	w.Wait()
 
 	// Get a list of all keys so that we can randomly pick them
-	keys := make([]string,len(kv))
+	keys := make([]string, len(kv))
 	for k, _ := range kv {
 		keys = append(keys, k)
 	}

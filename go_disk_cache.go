@@ -3,28 +3,28 @@ package godiskcache
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/golang/groupcache/lru"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"sync"
 	"time"
-	"github.com/golang/groupcache/lru"
 ) //import
 
 type GoDiskCache struct {
 	mutex       sync.RWMutex
 	cachePrefix string
-	memCache		*lru.Cache
+	memCache    *lru.Cache
 } //struct
 
 type Params struct {
 	Directory string
-	MemItems	int
+	MemItems  int
 } //struct
 
 type DataWrapper struct {
-	Ts	 time.Time
+	Ts   time.Time
 	Data string
 } // struct
 
