@@ -30,7 +30,7 @@ type DataWrapper struct {
 
 func New(p *Params) *GoDiskCache {
 	var directory string = os.TempDir()
-	var items int = 10000
+	var items int = 100000
 
 	if len(p.Directory) > 0 {
 		directory = p.Directory
